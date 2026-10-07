@@ -2,7 +2,11 @@ using System;
 
 namespace Services
 {
-    class TelemetryService
+    interface ITelemetryService
+    {
+        
+    }
+    class TelemetryService: ITelemetryService
     {
         
     }
