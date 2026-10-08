@@ -1,27 +1,32 @@
 using System;
+using System.Collections.Generic;
 
 namespace TelemetryCollectorService.Core.Models
 {
     public class MachineMetrics
     {
-        public Guid instanceId {get;set;}
-        public DateTime Timestamp {get;set;}
-        public string Environment {get;set;}
-        public string CpuName {get;set;}
-        public float CpuLoad {get;set;}
-        public List<CoreLoad> CpuCoreLoads {get;set;} = new List<CoreLoad>();
+        public Guid instanceId { get; set; }
+        public DateTime Timestamp { get; set; }
+        public string Environment { get; set; }
+        public string CpuName { get; set; }
+        public float CpuLoad { get; set; }
+        public List<CoreLoad> CpuCoreLoads { get; set; } = new List<CoreLoad>();
 
-        public float RamLoad {get;set;}
-        public int TotalRam {get;set;}
+        public string GpuName { get; set; } = string.Empty;
+        public float GpuLoad { get; set; }
+        public float GpuRamUsedMb { get; set; }
 
-        public float WiFiTx {get;set;}
-        public float WiFiRx {get;set;}
-        public int OpenSockets {get;set;}
+        public float RamLoad { get; set; }
+        public int TotalRam { get; set; }
 
-        public float DiskCapacity {get;set;}
-        public float FreeDiskSpace {get;set;}
-        public double WritingSpeed {get;set;}
-        public double ReadingSpeed {get;set;}
+        public float WiFiTx { get; set; }
+        public float WiFiRx { get; set; }
+        public int OpenSockets { get; set; }
+
+        public float DiskCapacity { get; set; }
+        public float FreeDiskSpace { get; set; }
+        public double WritingSpeed { get; set; }
+        public double ReadingSpeed { get; set; }
 
         public string ToString()
         {
@@ -30,12 +35,24 @@ namespace TelemetryCollectorService.Core.Models
             {
                 cpuLoad += $" / {core.CoreId} - {core.Load}";
             }
-            return $"{this.instanceId} | {this.Timestamp} | {this.TotalRam} / {this.RamLoad} | {this.CpuName} | {cpuLoad} | {this.WiFiRx}/TxBps | {this.WiFiTx}/RxBps |Disk Metrics {DiskCapacity}Gb/{FreeDiskSpace}Gb | {this.ReadingSpeed}/Rbps | {this.WritingSpeed}/Wbps";
+            
+            return $"{this.instanceId} | {this.Timestamp} | RAM: {this.RamLoad * 100}% | CPU: {this.CpuName} {cpuLoad} | GPU: {this.GpuName} ({this.GpuLoad}%, {this.GpuRamUsedMb}MB) | Net: {this.WiFiRx}Rx/{this.WiFiTx}Tx | Disk: {FreeDiskSpace}Gb вільних | Read: {this.ReadingSpeed} | Write: {this.WritingSpeed}";
+        }
+        public void CalcCpuLoad()
+        {
+            int count = 0;
+            foreach(CoreLoad core in CpuCoreLoads)
+            {
+               this.CpuLoad  += core.Load;
+               count++;
+            }
+            this.CpuLoad = this.CpuLoad / count;
         }
     }
+
     public class CoreLoad
     {
-        public string CoreId {get;set;}
-        public float Load {get;set;}
+        public string CoreId { get; set; }
+        public float Load { get; set; }
     }
 }

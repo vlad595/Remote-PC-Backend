@@ -1,37 +1,65 @@
 <!DOCTYPE html>
-<html>
+<html lang="uk">
 <head>
-    <title>Тест SignalR</title>
-    <!-- Підключаємо SignalR клієнт через CDN -->
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <title>Моніторинг агента</title>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/microsoft-signalr/8.0.0/signalr.min.js"></script>
 </head>
-<body style="background: #222; color: #0f0; font-family: monospace;">
-    <h2>Очікування метрик...</h2>
+<body style="background:#222;color:#0f0;font-family:monospace">
+    <h2>Моніторинг агента</h2>
+    <p id="status">Підключення до сервера...</p>
+    <button id="download">Завантажити агента</button>
+    <button id="turnOff" disabled>Вимкнути ПК агента</button>
     <div id="log"></div>
 
     <script>
-        // Зміни порт на свій, якщо він інший
+        let agentId = null;
+        const status = document.getElementById("status");
+        const turnOffButton = document.getElementById("turnOff");
         const connection = new signalR.HubConnectionBuilder()
-            .withUrl("http://localhost:5034/Hub") 
+            .withUrl(`${location.origin}/Hub`)
             .build();
 
-        // 1. Слухаємо подію "ReceiveMetrics", яку відправляє сервер
-        connection.on("ReceiveMetrics", function (metrics) {
-            const logDiv = document.getElementById("log");
-            logDiv.innerHTML = `<p>Отримано: ${JSON.stringify(metrics)}</p>` + logDiv.innerHTML;
+        connection.on("ReceiveMetrics", metrics => {
+            const p = document.createElement("p");
+            p.textContent = `Метрики: ${JSON.stringify(metrics)}`;
+            document.getElementById("log").prepend(p);
         });
 
-        // 2. Підключаємось і входимо в сесію
-        connection.start().then(function () {
-            document.getElementById("log").innerHTML += "<p>✅ Підключено до сервера!</p>";
-            
-            // СЮДИ ВСТАВ ID З config.json
-            connection.invoke("JoinSession", "12345").then(() => {
-                document.getElementById("log").innerHTML += "<p>✅ Підписано на сесію!</p>";
-            });
-        }).catch(function (err) {
-            console.error(err.toString());
-            document.getElementById("log").innerHTML += `<p style="color:red;">❌ Помилка: ${err.toString()}</p>`;
+        connection.start()
+            .then(() => status.textContent = "З’єднано із сервером. Завантажте агента для початку.")
+            .catch(err => status.textContent = `Помилка з’єднання: ${err}`);
+
+        document.getElementById("download").addEventListener("click", async () => {
+            try {
+                const response = await fetch("/api/download-agent");
+                if (!response.ok) throw new Error(`HTTP ${response.status}`);
+                agentId = response.headers.get("X-Agent-Id");
+                if (!agentId) throw new Error("Сервер не повернув X-Agent-Id");
+                await connection.invoke("JoinSession", agentId);
+
+                const blob = await response.blob();
+                const link = document.createElement("a");
+                link.href = URL.createObjectURL(blob);
+                link.download = "RemoteMonitorAgent.zip";
+                link.click();
+                URL.revokeObjectURL(link.href);
+
+                status.textContent = `Агент завантажений. ID сесії: ${agentId}. Запустіть його на ПК агента.`;
+                turnOffButton.disabled = false;
+            } catch (err) {
+                status.textContent = `Помилка завантаження/підписки: ${err}`;
+            }
+        });
+
+        turnOffButton.addEventListener("click", async () => {
+            try {
+                await connection.invoke("TurnOfPc", agentId, "");
+                status.textContent = `Команду вимкнення надіслано агенту ${agentId}.`;
+            } catch (err) {
+                status.textContent = `Не вдалося надіслати команду: ${err}`;
+            }
         });
     </script>
 </body>

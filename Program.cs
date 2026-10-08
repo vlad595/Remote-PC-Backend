@@ -24,7 +24,7 @@ var app = builder.Build();
 
 app.UseCors("AllowAll");
 
-app.MapGet("/", () => "Hello World!");
+app.MapGet("/", () => Results.File(Path.Combine(app.Environment.ContentRootPath, "index.html"), "text/html; charset=utf-8"));
 
 app.MapGet("/api/download-agent", (HttpContext context) =>
 {
