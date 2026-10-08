@@ -2,7 +2,11 @@ using System;
 
 namespace Services
 {
-    class CommandsService
+    interface ICommandsService
+    {
+        
+    }
+    class CommandsService: ICommandsService
     {
         
     }
