@@ -1,0 +1,38 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Тест SignalR</title>
+    <!-- Підключаємо SignalR клієнт через CDN -->
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/microsoft-signalr/8.0.0/signalr.min.js"></script>
+</head>
+<body style="background: #222; color: #0f0; font-family: monospace;">
+    <h2>Очікування метрик...</h2>
+    <div id="log"></div>
+
+    <script>
+        // Зміни порт на свій, якщо він інший
+        const connection = new signalR.HubConnectionBuilder()
+            .withUrl("http://localhost:5034/Hub") 
+            .build();
+
+        // 1. Слухаємо подію "ReceiveMetrics", яку відправляє сервер
+        connection.on("ReceiveMetrics", function (metrics) {
+            const logDiv = document.getElementById("log");
+            logDiv.innerHTML = `<p>Отримано: ${JSON.stringify(metrics)}</p>` + logDiv.innerHTML;
+        });
+
+        // 2. Підключаємось і входимо в сесію
+        connection.start().then(function () {
+            document.getElementById("log").innerHTML += "<p>✅ Підключено до сервера!</p>";
+            
+            // СЮДИ ВСТАВ ID З config.json
+            connection.invoke("JoinSession", "12345").then(() => {
+                document.getElementById("log").innerHTML += "<p>✅ Підписано на сесію!</p>";
+            });
+        }).catch(function (err) {
+            console.error(err.toString());
+            document.getElementById("log").innerHTML += `<p style="color:red;">❌ Помилка: ${err.toString()}</p>`;
+        });
+    </script>
+</body>
+</html>

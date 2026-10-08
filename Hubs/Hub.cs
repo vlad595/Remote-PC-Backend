@@ -20,6 +20,7 @@ namespace Hubs
         public async Task SendMetrics(string sessionId, MachineMetrics metrics)
         {
             await Clients.GroupExcept(sessionId, Context.ConnectionId).SendAsync("ReceiveMetrics", metrics);
+            Console.WriteLine($"ReceivedMetricsFromAgent: {sessionId}, {metrics.ToString()}");
         }
         public async Task TurnOfPc(string sessionId, string time = "")
         {
