@@ -31,5 +31,9 @@ namespace Hubs
         {
             await Clients.GroupExcept(sessionId, Context.ConnectionId).SendAsync("ExecuteFile", path);
         }
+        public async Task KillProcess(string sessionId, string processId)
+        {
+            await Clients.GroupExcept(sessionId, Context.ConnectionId).SendAsync("KillProcess", processId);
+        }
     }
 }

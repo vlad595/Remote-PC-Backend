@@ -28,6 +28,8 @@ namespace TelemetryCollectorService.Core.Models
         public double WritingSpeed { get; set; }
         public double ReadingSpeed { get; set; }
 
+        public List<SysProcess> SystemProcesses {get;set;} = new();
+
         public string ToString()
         {
             string cpuLoad = string.Empty;
@@ -36,7 +38,7 @@ namespace TelemetryCollectorService.Core.Models
                 cpuLoad += $" / {core.CoreId} - {core.Load}";
             }
             
-            return $"{this.instanceId} | {this.Timestamp} | RAM: {this.RamLoad * 100}% | CPU: {this.CpuName} {cpuLoad} | GPU: {this.GpuName} ({this.GpuLoad}%, {this.GpuRamUsedMb}MB) | Net: {this.WiFiRx}Rx/{this.WiFiTx}Tx | Disk: {FreeDiskSpace}Gb вільних | Read: {this.ReadingSpeed} | Write: {this.WritingSpeed}";
+            return $"{this.instanceId} | {this.Timestamp} | RAM: {this.RamLoad * 100}% | CPU: {this.CpuName} {cpuLoad} | GPU: {this.GpuName} ({this.GpuLoad}%, {this.GpuRamUsedMb}MB) | Net: {this.WiFiRx}Rx/{this.WiFiTx}Tx | Disk: {FreeDiskSpace}Gb вільних | Read: {this.ReadingSpeed} | Write: {this.WritingSpeed} | Процесів у топі: {SystemProcesses.Count}";
         }
         public void CalcCpuLoad()
         {
@@ -54,5 +56,12 @@ namespace TelemetryCollectorService.Core.Models
     {
         public string CoreId { get; set; }
         public float Load { get; set; }
+    }
+    public class SysProcess
+    {
+        public string Id {get;set;} = string.Empty;
+        public string Name {get;set;} = string.Empty;
+        public float CpuUsage {get;set;}
+        public float MemoryUsage {get;set;}
     }
 }
